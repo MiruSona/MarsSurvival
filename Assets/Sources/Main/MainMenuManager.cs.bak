@@ -1,0 +1,95 @@
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
+using UnityEngine.Advertisements;
+
+using System;
+
+public class MainMenuManager : MonoBehaviour {
+
+    //참조
+    private SystemDAO.FileManager file_manager;
+    private GameDAO.PlayerData player_data;
+    private Credit credit;
+    private GameObject warning_panel;
+    private GameObject artifact_menu;
+    private GameObject continue_btn;
+    private GameObject commercial_btn;
+    private GameObject warning_text;
+
+    //초기화
+    void Start() {
+        file_manager = SystemDAO.instance.file_manager;
+        player_data = GameDAO.instance.player_data;
+        credit = transform.FindChild("Credits").GetComponent<Credit>();
+        warning_panel = transform.FindChild("Warning").gameObject;
+        artifact_menu = transform.FindChild("ArtifactMenu").gameObject;
+        continue_btn = transform.FindChild("Continue").gameObject;
+        commercial_btn = transform.FindChild("CommercialBtn").gameObject;
+
+        warning_text = transform.FindChild("Warning_text").gameObject;
+    }
+
+    void Update() {
+        //세이브 파일이 있고, 컨티뉴 버튼 비활성화 되어있다면 활성화
+        if (!continue_btn.activeSelf && file_manager.have_save)
+            continue_btn.SetActive(true);
+
+        //세이브 파일 유무에 따라 광고 버튼 활성/비활성화
+        if (!file_manager.have_save)
+            commercial_btn.SetActive(false);
+        else if (file_manager.have_save)
+            commercial_btn.SetActive(true);
+
+        //백키 누르면 종료
+        if (Input.GetKey(KeyCode.Escape))
+            Application.Quit();
+    }
+
+    //뉴게임 버튼
+    public void NewGameBtn() {
+        //세이브 파일 있으면 경고
+        if (file_manager.have_save)
+            warning_panel.SetActive(true);
+        //세이브 파일 없으면 바로 실행
+        else
+            SceneManager.LoadScene("GameMain");
+    }
+
+    //컨티뉴 버튼
+    public void ContinueBtn() {
+        SceneManager.LoadScene("GameMain");
+    }
+
+    //크레딧 버튼
+    public void CreditBtn() {
+        if (!credit.gameObject.activeSelf)
+            credit.gameObject.SetActive(true);
+        else {
+            if (credit.alpha_enum == Credit.Alpha.Stay)
+                credit.alpha_enum = Credit.Alpha.Sub;
+        }
+    }
+
+    //아티펙트 버튼
+    public void ArtifactBtn() {
+        artifact_menu.SetActive(true);
+    }
+
+    public void CommercialBtn() {
+        //show
+        Advertisement.Show("rewardedVideo");
+        player_data.my_subdata.crystal += 1;
+
+        //not initialize yet
+        if (!warning_text.activeSelf) //날짜값 받아서 판정하는것도 같이 넣어주
+            warning_text.SetActive(true);
+    }
+
+    public void GPGSBtn() {
+        if (Social.localUser.authenticated)
+            Social.ShowAchievementsUI();
+    }
+
+
+}
